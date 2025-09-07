@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>REZZ - ZERO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#000;
+      --card:#0b0b10;
+      --accent:#7c3aed;
+      --accent-2:#a78bfa;
+      --muted:#d1d5db;
+      color-scheme:dark;
+    }
+    *{box-sizing:border-box;font-family:Poppins,system-ui,Segoe UI,Roboto,Arial}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:white;
+      min-height:100vh;
+      display:flex;
+      justify-content:flex-start;
+      flex-direction:column;
+      padding:20px;
+    }
+    canvas.particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1}
+    .card{
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(124,58,237,0.3);
+      padding:40px;
+      border-radius:24px;
+      max-width:1100px;
+      width:100%;
+      margin:40px auto;
+      box-shadow:0 20px 60px rgba(0,0,0,.8);
+    }
+    h1{
+      margin:0 0 30px;
+      font-size:34px;
+      text-transform:uppercase;
+      letter-spacing:3px;
+      color:var(--accent-2);
+      text-align:center;
+      text-shadow:0 0 18px var(--accent);
+    }
+    .row{display:flex;flex-wrap:wrap;gap:30px}
+    .col{flex:1;min-width:320px}
+    .uploader{
+      border:2px dashed rgba(124,58,237,0.5);
+      padding:30px;
+      border-radius:20px;
+      text-align:center;
+      background:linear-gradient(180deg, rgba(124,58,237,0.05), transparent);
+    }
+    input[type=file]{display:none}
+    label.btn{
+      display:inline-block;
+      background:var(--accent);
+      color:#fff;
+      padding:16px 24px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:700;
+      text-transform:uppercase;
+      font-size:16px;
+      box-shadow:0 0 18px var(--accent);
+      transition:all .2s;
+    }
+    label.btn:hover{box-shadow:0 0 28px var(--accent-2)}
+    .btn-ghost{
+      background:transparent;
+      border:2px solid var(--accent-2);
+      color:var(--accent-2);
+      padding:14px 20px;
+      border-radius:12px;
+      text-transform:uppercase;
+      cursor:pointer;
+      font-weight:600;
+      transition:all .2s;
+    }
+    .btn-ghost:hover{background:rgba(167,139,250,0.1)}
+    img#preview{
+      max-width:100%;
+      border-radius:14px;
+      display:block;
+      margin:20px auto;
+      box-shadow:0 10px 40px rgba(124,58,237,0.3)
+    }
+    .result{margin-top:20px;font-size:20px}
+    .bar{
+      height:32px;
+      background:rgba(255,255,255,0.05);
+      border-radius:999px;
+      overflow:hidden;
+      margin-bottom:12px
+    }
+    .bar > i{
+      display:block;
+      height:100%;
+      width:0;
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      transition:width .6s ease
+    }
+    .muted{color:var(--muted);font-size:15px}
+    .status-large{
+      font-weight:700;
+      text-transform:uppercase;
+      color:var(--accent-2);
+      margin:16px 0;
+      font-size:24px;
+      text-align:center;
+      text-shadow:0 0 12px var(--accent)
+    }
+    pre.note{
+      background:#050406;
+      padding:16px;
+      border-radius:14px;
+      color:#c7d2da;
+      font-size:14px;
+      white-space:pre-wrap
+    }
+    footer{font-size:12px;color:var(--muted);margin-top:20px;text-transform:uppercase;text-align:center}
+    .join-btn{
+      margin-top:30px;
+      display:block;
+      text-align:center
+    }
+    .join-btn a{
+      display:inline-block;
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      color:#fff;
+      padding:16px 26px;
+      border-radius:16px;
+      text-transform:uppercase;
+      font-weight:700;
+      font-size:18px;
+      text-decoration:none;
+      box-shadow:0 0 22px var(--accent-2);
+      transition:all .2s
+    }
+    .join-btn a:hover{box-shadow:0 0 32px var(--accent-2)}
+  </style>
+</head>
+<body>
+  <canvas class="particles"></canvas>
+  <div class="card">
+    <h1>REZZ - ZERO FACE SCORE</h1>
+    <div class="row">
+      <div class="col">
+        <div class="uploader" id="uploader">
+          <p class="muted">UP FOTO SECARA JELAS</p>
+          <label class="btn">PILIH FOTO<input id="file" type="file" accept="image/*"></label>
+          <p class="muted">SCAN/RESET</p>
+          <canvas id="canvas" style="display:none"></canvas>
+          <img id="preview" alt="preview" class="hidden" />
+          <div class="controls" style="margin-top:16px">
+            <button id="scanBtn" class="btn-ghost" disabled>SCAN</button>
+            <button id="resetBtn" class="btn-ghost hidden">RESET</button>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="result">
+          <div id="status" class="status-large">MODEL BELUM DIMUAT</div>
+          <div id="scores" class="hidden">
+            <p id="labelGood" style="font-size:22px;margin:10px 0"></p>
+            <div class="bar"><i id="barGood"></i></div>
+            <p id="labelBad" style="font-size:22px;margin:10px 0"></p>
+            <div class="bar"><i id="barBad" style="background:linear-gradient(90deg,#ef4444,#f97316)"></i></div>
+            <p class="muted" id="detail">-</p>
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <pre class="note">YANG DINILAI:
+1. SYMMETRY (KESEIMBANGAN WAJAH)
+2. SMILE (TINGKAT SENYUM)
+3. GENDER DETECTION (COWO=GANTENG, CEWE=CANTIK)
+4. SCORE FINAL = 60% SYMMETRY + 40% SMILE</pre>
+        </div>
+      </div>
+    </div>
+    <div class="join-btn">
+      <a href="https://whatsapp.com/channel/0029Vb6KSxx3LdQSxDHuCl3C" target="_blank">JOIN SALURAN</a>
+    </div>
+    <footer>JANGAN LUPA JOIN SALURAN AGAR DAPET UPDATE</footer>
+  </div>
+
+  <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script>
+    const statusEl=document.getElementById('status')
+    const fileEl=document.getElementById('file')
+    const preview=document.getElementById('preview')
+    const canvas=document.getElementById('canvas')
+    const scoresEl=document.getElementById('scores')
+    const labelGood=document.getElementById('labelGood')
+    const labelBad=document.getElementById('labelBad')
+    const barGood=document.getElementById('barGood')
+    const barBad=document.getElementById('barBad')
+    const detailEl=document.getElementById('detail')
+    const scanBtn=document.getElementById('scanBtn')
+    const resetBtn=document.getElementById('resetBtn')
+    const uploader=document.getElementById('uploader')
+
+    let modelsLoaded=false
+
+    async function loadModels(){
+      statusEl.textContent='MEMUAT MODEL...'
+      try{
+        const base='https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights'
+        await faceapi.nets.tinyFaceDetector.loadFromUri(base)
+        await faceapi.nets.faceLandmark68Net.loadFromUri(base)
+        await faceapi.nets.faceExpressionNet.loadFromUri(base)
+        await faceapi.nets.ageGenderNet.loadFromUri(base)
+        modelsLoaded=true
+        statusEl.textContent='SERVER : ONLINE'
+      }catch(e){console.error(e);statusEl.textContent='GAGAL MEMUAT MODEL'}
+    }
+
+    function average(pts){const s=pts.reduce((a,p)=>({x:a.x+p.x,y:a.y+p.y}),{x:0,y:0});return{x:s.x/pts.length,y:s.y/pts.length}}
+    function clamp01(v){return Math.max(0,Math.min(1,v))}
+    function computeSymmetry(landmarks){
+      const leftEye=average(landmarks.getLeftEye())
+      const rightEye=average(landmarks.getRightEye())
+      const mouthLeft=landmarks.getMouth()[0]
+      const mouthRight=landmarks.getMouth()[6]
+      const nose=landmarks.getNose()[3]
+      const centerX=(leftEye.x+rightEye.x+mouthLeft.x+mouthRight.x+nose.x)/5
+      const asym=(Math.abs(leftEye.x-(2*centerX-rightEye.x))+Math.abs(mouthLeft.x-(2*centerX-mouthRight.x)))/2
+      const faceWidth=Math.abs(rightEye.x-leftEye.x)
+      if(!faceWidth||!isFinite(faceWidth))return 0.5
+      const norm=Math.min(1,asym/(faceWidth*0.9))
+      return 1-norm
+    }
+
+    async function analyzeImage(img){
+      if(!modelsLoaded){statusEl.textContent='MODEL BELUM SIAP';return}
+      statusEl.textContent='MENDETEKSI WAJAH...'
+      const options=new faceapi.TinyFaceDetectorOptions({inputSize:512,scoreThreshold:0.5})
+      const detection=await faceapi.detectSingleFace(img,options).withFaceLandmarks().withFaceExpressions().withAgeAndGender()
+      if(!detection){statusEl.textContent='WAJAH TIDAK TERDETEKSI';scoresEl.classList.add('hidden');return}
+
+      const landmarks=detection.landmarks
+      const symmetry=computeSymmetry(landmarks)
+      const expressions=detection.expressions||{}
+      const smile=clamp01(expressions.happy||0)
+      const gender=detection.gender||'male'
+      const rawBeauty=clamp01(0.6*symmetry+0.4*smile)
+      const percent=Math.round(rawBeauty*100)
+      const percentBad=100-percent
+
+      if(gender==='female'){
+        labelGood.textContent=`CANTIK: ${percent}%`
+        labelBad.textContent=`JELEK: ${percentBad}%`
+      }else{
+        labelGood.textContent=`GANTENG: ${percent}%`
+        labelBad.textContent=`JELEK: ${percentBad}%`
+      }
+
+      detailEl.textContent=`Symmetry: ${Math.round(symmetry*100)}%, Senyum: ${Math.round(smile*100)}%, Gender: ${gender.toUpperCase()}`
+      barGood.style.width=percent+'%'
+      barBad.style.width=percentBad+'%'
+      scoresEl.classList.remove('hidden')
+      statusEl.textContent='ANALISIS SELESAI'
+    }
+
+    fileEl.addEventListener('change',e=>{
+      const f=e.target.files[0];if(!f)return
+      const url=URL.createObjectURL(f)
+      preview.src=url
+      preview.classList.remove('hidden')
+      scanBtn.disabled=false
+      resetBtn.classList.remove('hidden')
+      preview.onload=()=>{
+        canvas.width=preview.naturalWidth
+        canvas.height=preview.naturalHeight
+        canvas.getContext('2d').drawImage(preview,0,0)
+        URL.revokeObjectURL(url)
+      }
+    })
+    scanBtn.addEventListener('click',()=>{if(preview.src)analyzeImage(canvas)})
+    resetBtn.addEventListener('click',()=>{
+      fileEl.value=''
+      preview.src=''
+      preview.classList.add('hidden')
+      scanBtn.disabled=true
+      resetBtn.classList.add('hidden')
+      scoresEl.classList.add('hidden')
+      statusEl.textContent='MODEL SIAP — UPLOAD FOTO & SCAN'
+    })
+    uploader.addEventListener('dragover',e=>{e.preventDefault();uploader.style.borderColor='var(--accent-2)'})
+    uploader.addEventListener('dragleave',e=>{uploader.style.borderColor=''})
+    uploader.addEventListener('drop',e=>{
+      e.preventDefault();uploader.style.borderColor=''
+      const f=e.dataTransfer.files[0];if(!f)return
+      fileEl.files=e.dataTransfer.files
+      fileEl.dispatchEvent(new Event('change'))
+    })
+
+    loadModels()
+
+    // Particles background
+    const c=document.querySelector('.particles'),ctx=c.getContext('2d')
+    let particles=[]
+    function resize(){c.width=innerWidth;c.height=innerHeight}
+    addEventListener('resize',resize);resize()
+    for(let i=0;i<80;i++){particles.push({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5})}
+    function loop(){
+      ctx.clearRect(0,0,c.width,c.height)
+      particles.forEach(p=>{
+        p.x+=p.vx;p.y+=p.vy
+        if(p.x<0||p.x>c.width)p.vx*=-1
+        if(p.y<0||p.y>c.height)p.vy*=-1
+        ctx.fillStyle='rgba(167,139,250,.8)'
+        ctx.beginPath();ctx.arc(p.x,p.y,2.2,0,Math.PI*2);ctx.fill()
+      })
+      requestAnimationFrame(loop)
+    }
+    loop()
+  </script>
+</body>
+</html>
